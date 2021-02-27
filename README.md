@@ -25,8 +25,8 @@ If required, definition `#define DEBUG` can be added to `steganography.h`. Havin
 Parameter file1 represents a file having another image hidden in it. This could be the file mentioned in the section above, `merged_image.bmp`. Upon successful extraction, a file called `obr1_separated.bmp` will be generated. This image should not differ from the original image being hidden into the "wrapper" image. To test this out, we can use the `cmp` command on a UNIX machine.
 
 ## Testing
-For testing purposes, there's a script `test/test_01.sh` which automatically tests the functionality of the program using the images provided along with the task itself.
+For testing purposes, there's a script `test/test_01.sh`, which automatically tests the functionality of the program using the images provided along with the task itself.
 
 # Steganography technique
-
-
+## changing the least significant bits
+Depending on the file size ratio, either 1, 2, or 4 last bits of a byte will be modified. The program will check the size of the file we want to hide, and if it turns out that changing the least significant bit will be enough to hide the entire file, it will do so. If not, it will use the same approach, but this time, with the last two least significant bits. If this is still enough, it will try to use the last four least significant bits. If none of these options works, the program will print out an error message saying the file is not big enough to hold a file of this size.

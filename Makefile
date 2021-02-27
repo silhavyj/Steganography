@@ -1,4 +1,6 @@
 TARGET = stg
+SUBMIT_FILE = BIT_ukol_1_jakub_silhavy.zip
+FILES_TO_SUBMIT = images src tests Makefile README.md
 CCX    = g++
 FLAGS  = -pthread -Wall -O2 -std=c++17 -pedantic-errors -Wextra -Werror
 SRC    = src
@@ -12,6 +14,10 @@ $(TARGET) : $(OBJECT)
 $(BIN)/%.o : $(SRC)/%.cpp
 	@mkdir -p $(BIN)
 	$(CCX) $(FLAGS) -c $< -o $@
+
+.PHONY submit:
+submit:
+	zip -r $(SUBMIT_FILE) $(FILES_TO_SUBMIT)
 
 .PHONY clean:
 clean:

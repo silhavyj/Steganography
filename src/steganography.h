@@ -5,36 +5,41 @@
 #include <iostream>
 
 #define BMP_MAGIC_NUM 0x4D42
-#define ROW_BYTES_ALIGN 4
-#define TAG_SIZE 3
-#define MERGED_FILE_NAME "merged_image.bmp"
+#define ROW_BYTES_ALIGN 4 // each row must start at an address aligned to 4 bytes
+#define TAG_SIZE        3 // we use 3 bytes to store the tag (how many bits we change in terms of LSB)
+
+#define MERGED_FILE_NAME      "merged_image.bmp"
 #define SEPARATED_FILE_NAME_1 "obr1_separated.bmp"
 #define SEPARATED_FILE_NAME_2 "obr2_separated.bmp"
 
+// for debuggin
+// (printing additional info etc)
 //#define DEBUG
 #ifdef DEBUG
 # define MERGED_DIFF_FILE_NAME "merged_image_diff.bmp"
 #endif
 
+// enable printing out 
+// (verbose)
 #define INFO
 #ifdef INFO
 # define PROGRESS_STEP 10
 #endif
 
 struct BMPFileHeader_t {
-    uint16_t fileType;
-    uint32_t fileSize;
+    uint16_t fileType;   // "magic" number of the bmp format (can be used for validation)
+    uint32_t fileSize;   // size of the file
     uint16_t reserver1;
     uint16_t reserver2;
-    uint32_t dataOffset;
+    uint32_t dataOffset; // offset in bytes where the actual data starts
 } __attribute__((packed));
 
 struct BMPInfoHeader_t {
     uint32_t size;
-    int32_t width;
-    int32_t height;
+    int32_t width;       // width of the image
+    int32_t height;      // hight of the image
     uint16_t planes;
-    uint16_t bitDepth;
+    uint16_t bitDepth;   // number of bytes per pixel
     uint32_t compression;
     uint32_t sizeImage;
     int32_t xPixelsPerMeter;

@@ -9,6 +9,7 @@
 #define TAG_SIZE 3
 #define MERGED_FILE_NAME "merged_image.bmp"
 #define SEPARATED_FILE_NAME_1 "obr1_separated.bmp"
+#define SEPARATED_FILE_NAME_2 "obr2_separated.bmp"
 
 //#define DEBUG
 #ifdef DEBUG

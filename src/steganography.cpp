@@ -27,7 +27,7 @@ void Steganography::hide(const char *fileName1, const char *fileName2) {
 
     file2.read((char *)&bmpFileHeader, sizeof(BMPFileHeader_t));
     if (bmpFileHeader.fileType != BMP_MAGIC_NUM) {
-        std::cout << "Invalid format of file '" << fileName2 << "\n";
+        std::cout << "Invalid format of file '" << fileName2 << "'\n";
         return;
     }
 
@@ -171,18 +171,19 @@ void Steganography::copyFile(const char *fileName1, const char *fileName2) {
 }
 
 void Steganography::extract(const char *fileName) {
-    std::fstream file{fileName, std::ios::out | std::ios::in | std::ios::binary};
-    if (!file) {
+    if (access(fileName, F_OK ) == -1) {
         std::cout << "File '" << fileName << "' not found\n";
         return;
     }
+    copyFile(fileName, SEPARATED_FILE_NAME_2);
+    std::fstream file{SEPARATED_FILE_NAME_2, std::ios::out | std::ios::in | std::ios::binary};
 
     BMPFileHeader_t bmpFileHeader;
     BMPInfoHeader_t bmpInfoHeader;
 
     file.read((char *)&bmpFileHeader, sizeof(BMPFileHeader_t));
     if (bmpFileHeader.fileType != BMP_MAGIC_NUM) {
-        std::cout << "Invalid format of file '" << fileName << "\n";
+        std::cout << "Invalid format of file '" << fileName << "'\n";
         return;
     }
     file.read((char *)&bmpInfoHeader, sizeof(BMPInfoHeader_t));
@@ -230,15 +231,20 @@ void Steganography::extract(const char *fileName) {
                 switch (tag) {
                     case 1:
                         byteOriginal |= (byte & 0x01) << p;
+                        byte &= 0xFE;
                         break;
                     case 2:
                         byteOriginal |= (byte & 0x03) << p;
+                        byte &= 0xFC; 
                         break;
                     case 4:
                         byteOriginal |= (byte & 0x0F) << p;
+                        byte &= 0xF0; 
                         break;
                 }
-                p += tag;
+                p += tag; 
+                file.seekg(-1, std::ios_base::cur);
+                file.write((char *)&byte, sizeof(uint8_t));
                 if (p == 8) {
                     outputData.push_back(byteOriginal);
                     byteOriginal = 0;

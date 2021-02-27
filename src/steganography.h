@@ -16,7 +16,7 @@
 # define MERGED_DIFF_FILE_NAME "merged_image_diff.bmp"
 #endif
 
-//#define INFO
+#define INFO
 #ifdef INFO
 # define PROGRESS_STEP 10
 #endif

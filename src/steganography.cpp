@@ -184,7 +184,7 @@ void Steganography::extract(const char *fileName) {
 
     file.read((char *)&bmpFileHeader, sizeof(BMPFileHeader_t));
     if (bmpFileHeader.fileType != BMP_MAGIC_NUM) {
-        std::cout << "Invalid format of file '" << fileName << "'\n";
+        std::cout << "Invalid format of file '" << SEPARATED_FILE_NAME_2 << "'\n";
         return;
     }
     file.read((char *)&bmpInfoHeader, sizeof(BMPInfoHeader_t));
@@ -215,6 +215,7 @@ void Steganography::extract(const char *fileName) {
     }
     if (!(tag == 1 || tag == 2 || tag == 4)) {
         std::cout << "Invalid tag '" << (int)tag << "'\n";
+        remove(SEPARATED_FILE_NAME_2);
         return;
     }
 
@@ -251,13 +252,14 @@ void Steganography::extract(const char *fileName) {
                     outputData.push_back(byteOriginal);
                     byteOriginal = 0;
                     #ifdef INFO
-                    if (size >= (uint32_t)outputData.size())
+                    if (size > sizeof(BMPFileHeader_t))
                         showProgress(size, outputData.size(), PROGRESS_STEP);
                     #endif
                     p = 0;
                     if (outputData.size() == sizeof(BMPFileHeader_t)) {
                         if (((BMPFileHeader_t *)&outputData[0])->fileType != BMP_MAGIC_NUM) {
-                            std::cout << "either there is no hidded image in '" << fileName << "' or it was damaged!\n";
+                            std::cout << "Esither there is no hidded image in '" << fileName << "' or it was damaged!\n";
+                            remove(SEPARATED_FILE_NAME_2);
                             return;
                         }
                         size = ((BMPFileHeader_t *)&outputData[0])->fileSize;

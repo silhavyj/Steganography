@@ -47,7 +47,7 @@ If required, definition `#define DEBUG` can be added to `steganography.h`. Havin
 
 ```
 
-Parameter file1 represents a file having another image hidden in it. This could be the file mentioned in the section above, `merged_image.bmp`. Upon successful extraction, a file called `obr1_separated.bmp` will be generated. This image should not differ from the original image being hidden into the "wrapper" image. To test this out, we can use the `cmp` command on a UNIX machine.
+Parameter file1 represents a file having another image hidden in it. This could be the file mentioned in the section above, `merged_image.bmp`. Upon successful extraction, a file called `obr1_separated.bmp` will be generated. This image should not differ from the original image being hidden in the "wrapper" image. To test this out, we can use the `cmp` command on a UNIX machine.
 
   
 
@@ -61,6 +61,39 @@ For testing purposes, there's a script `test/test_01.sh`, which automatically te
 
 ## changing the least significant bits
 
-Depending on the file size ratio, either **1, 2, or 4 last bits of a byte will be modified**. The program will check the size of the file we want to hide, and if it turns out that changing the least significant bit will be enough to hide the entire file, it will do so. If not, it will use the same approach, but this time, with the last two least significant bits. If this is still not enough, it will try to use the last four least significant bits. **If none of these options works, the program will print out an error message saying the file is not big enough to hold a file of this size**.
+Depending on the file size ratio, either **1, 2, or 4 last bits of a byte will be modified**. The program will check the size of the file we want to hide, and if it turns out that changing only the least significant bit will be enough to hide the entire file, it will do so. If not, it will use the same approach, but this time, with the last two least significant bits. If this is still not enough, it will try to use the last four least significant bits. **If none of these options works, the program will print out an error message saying the file is not big enough to hold an image of this size**.
+In order to be able to yank out the original image afterwards, **we need to store the information about how many bits we have modified into the final merged image as well**. To do so, we use the least significant bits of **the first three bytes** of the data array of the image. When it comes to separating the images, we'll first read these three bits, and then we'll continue reading the actually data accordingly.
 
-In order to be able to yank out the original image afterwards, **we need to store the information about how many bits we have modified into the final merged image as well**. To do so, we use the least significant bits of **the first three bytes** of the data array of the image. When it comes to separating the images, we'll first read these three bits, and then we'll continue read the actually data accordingly.
+# Implementation
+In order to be able to process large files, I've decided not to load the content of the files into memory directly. Instead, I used a streaming approach and took advantage of `std::fstream`. This downside of this, though, is that it's rather slow, and as a result, it takes a couple of seconds for the program to finish the process.
+To make this a bit more user-friendly, there is a simple progress bar showing the user how many percent  are left. 
+
+### process of merging two images (1)
+```bash
+./stg images/dwarf.bmp images/weber.bmp
+Starting merging images.
+Based on the size of the file, 4 bits will be modified.
+progress:
+10 20 30 40 50 60 70 80 90 100 [%]
+## ## ## ## ## ## 
+```
+### process of merging two images (2)
+```bash
+./stg images/dwarf.bmp images/weber.bmp
+Starting merging images.
+Based on the size of the file, 4 bits will be modified.
+progress:
+10 20 30 40 50 60 70 80 90 100 [%]
+## ## ## ## ## ## ## ## ## ##
+Done
+```
+
+### process of separating two images
+```bash
+Starting extracting the original file.
+4 bits were used to hide the image.
+progress:
+10 20 30 40 50 60 70 80 90 100 [%]
+## ## ## ## ## ## ## ## ## ## 
+Done
+```

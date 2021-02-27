@@ -57,7 +57,8 @@ void Steganography::hide(const char *fileName1, const char *fileName2) {
 #endif
 
 #ifdef INFO
-    std::cout << "Starting merging images. Based on the size of the file, " << (int)tag;
+    std::cout << "Starting merging images.\n";
+    std::cout << "Based on the size of the file, " << (int)tag;
     if (tag == 1)
         std::cout << " bit";
     else
@@ -218,7 +219,8 @@ void Steganography::extract(const char *fileName) {
     }
 
 #ifdef INFO
-    std::cout << "Starting extracting the original file. " << (int)tag;
+    std::cout << "Starting extracting the original file.\n";
+    std::cout << (int)tag;
     if (tag == 1)
         std::cout << " bit was used to hide the image.\n";
     std::cout << " bits were used to hide the image.\n";

@@ -15,7 +15,7 @@ int main(int argc, char *argv[]) {
     Steganography stg;
     switch (argc) {
         case 2:
-            if (strcmp(argv[1], "--help") || strcmp(argv[1], "-help"))
+            if (strcmp(argv[1], "--help") == 0 || strcmp(argv[1], "-help") == 0)
                 printHelp();
             else
                 stg.extract(argv[1]);

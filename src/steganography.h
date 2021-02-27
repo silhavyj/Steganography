@@ -9,7 +9,12 @@
 #define TAG_SIZE 3
 #define MERGED_FILE_NAME "merged_image.bmp"
 #define SEPARATED_FILE_NAME_1 "obr1_separated.bmp"
+
 //#define DEBUG
+#ifdef DEBUG
+# define MERGED_DIFF_FILE_NAME "merged_image_diff.bmp"
+#endif
+
 #define INFO
 #ifdef INFO
 # define PROGRESS_STEP 10
@@ -45,6 +50,9 @@ private:
 public:
     void hide(const char *fileName1, const char *fileName2);
     void extract(const char *fileName);
+#ifdef DEBUG
+    void generateDiff(const char *fileName1, const char *fileName2);
+#endif
 #ifdef INFO
     void showProgress(uint32_t total, uint32_t st, uint32_t step);
 #endif

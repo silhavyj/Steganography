@@ -62,7 +62,7 @@ void Steganography::hide(const char *fileName1, const char *fileName2) {
         std::cout << " bit";
     else
         std::cout << " bits";
-    std::cout << " will be modified...\n";
+    std::cout << " will be modified.\n";
 #endif
 
     file2.close();
@@ -98,6 +98,11 @@ void Steganography::hide(const char *fileName1, const char *fileName2) {
                     if (hiddenBytes == file1Size) {
                         #ifdef INFO
                         std::cout << "Done\n";
+                        #endif
+                        file1.close();
+                        file2.close();
+                        #ifdef DEBUG
+                        generateDiff(fileName2, MERGED_FILE_NAME);
                         #endif
                         return;
                     }
@@ -214,8 +219,8 @@ void Steganography::extract(const char *fileName) {
 #ifdef INFO
     std::cout << "Starting extracting the original file. " << (int)tag;
     if (tag == 1)
-        std::cout << " bit was used to hide the image...\n";
-    std::cout << " bits were used to hide the image...\n";
+        std::cout << " bit was used to hide the image.\n";
+    std::cout << " bits were used to hide the image.\n";
 #endif
 
     for (int i = 0; i < bmpInfoHeader.height; i++) {
@@ -264,6 +269,45 @@ void Steganography::extract(const char *fileName) {
             file.read((char *)&byte, sizeof(uint8_t));
     }
 }
+
+#ifdef DEBUG
+void Steganography::generateDiff(const char *fileName1, const char *fileName2) {
+    std::cout << "Creating a difference between the two images\n";
+    copyFile(fileName2, MERGED_DIFF_FILE_NAME);
+    std::fstream file1{fileName1, std::ios::in | std::ios::binary};
+    std::fstream file2{MERGED_DIFF_FILE_NAME, std::ios::out | std::ios::in | std::ios::binary};
+
+    uint8_t byte1;
+    uint8_t byte2;
+    BMPFileHeader_t bmpFileHeader;
+    BMPInfoHeader_t bmpInfoHeader;
+
+    file1.read((char *)&bmpFileHeader, sizeof(BMPFileHeader_t));
+    file1.read((char *)&bmpInfoHeader, sizeof(BMPInfoHeader_t));
+
+    int bytesPerPixel = bmpInfoHeader.bitDepth / 8;
+    int rowPadding = getRowPadding(bmpInfoHeader.width, bytesPerPixel);
+
+    file1.seekg(bmpFileHeader.dataOffset);
+    file2.seekg(bmpFileHeader.dataOffset);
+
+    for (int i = 0; i < bmpInfoHeader.height; i++) {
+        for (int j = 0; j < bmpInfoHeader.width; j++) {
+            for (int k = 0; k < bytesPerPixel; k++) {
+                file1.read((char *)&byte1, sizeof(uint8_t));
+                file2.read((char *)&byte2, sizeof(uint8_t));
+                byte2 = std::abs(byte1 - byte2);
+                file2.seekg(-1, std::ios_base::cur);
+                file2.write((char *)&byte2, sizeof(uint8_t));
+            }
+        }
+         for (int j = 0; j < rowPadding; j++) {
+            file1.read((char *)&byte1, sizeof(uint8_t));
+            file2.read((char *)&byte2, sizeof(uint8_t));
+         }
+    }
+}
+#endif
 
 #ifdef DEBUG
 std::ostream& operator<<(std::ostream& out, const BMPFileHeader_t& bmpFileHeader) {

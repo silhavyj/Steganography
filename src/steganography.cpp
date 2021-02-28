@@ -1,5 +1,4 @@
 #include <fstream>
-#include <stdexcept>
 #include <iostream>
 #include <memory>
 #include <vector>

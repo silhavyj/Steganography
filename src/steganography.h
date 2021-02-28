@@ -21,7 +21,7 @@
 
 // enable printing out 
 // (verbose)
-#define INFO
+// #define INFO
 #ifdef INFO
 # define PROGRESS_STEP 10
 #endif

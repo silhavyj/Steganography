@@ -24,7 +24,7 @@ void Steganography::hide(const char *fileName1, const char *fileName2) {
 
     // open up both files (images)
     std::fstream file2{fileName2, std::ios::out | std::ios::in | std::ios::binary};
-    std::fstream file1(fileName1, std::ios::binary | std::ios::in | std::ios::ate);
+    std::fstream file1{fileName1, std::ios::binary | std::ios::in | std::ios::ate};
 
     uint32_t file1Size = file1.tellg(); // get the size of the file we're hiding
     file1.seekg(0);
@@ -151,7 +151,7 @@ void Steganography::hide(const char *fileName1, const char *fileName2) {
                 }
                 p += tag;
 
-                // after we're change the byte,
+                // after we change the byte,
                 // store it back into the image again
                 file2.seekg(-1, std::ios_base::cur);
                 file2.write((char *)&byte2, sizeof(uint8_t));
@@ -198,21 +198,26 @@ void Steganography::copyFile(const char *fileName1, const char *fileName2) {
 }
 
 void Steganography::extract(const char *fileName) {
+    // test if the file exists
     if (access(fileName, F_OK ) == -1) {
         std::cout << "File '" << fileName << "' not found\n";
         return;
     }
+    // copy the file image obr2_separated.bmp so
+    // the original image will not be changed
     copyFile(fileName, SEPARATED_FILE_NAME_2);
     std::fstream file{SEPARATED_FILE_NAME_2, std::ios::out | std::ios::in | std::ios::binary};
 
     BMPFileHeader_t bmpFileHeader;
     BMPInfoHeader_t bmpInfoHeader;
 
+    // read the BMP file header and test the magic number
     file.read((char *)&bmpFileHeader, sizeof(BMPFileHeader_t));
     if (bmpFileHeader.fileType != BMP_MAGIC_NUM) {
         std::cout << "Invalid format of file '" << SEPARATED_FILE_NAME_2 << "'\n";
         return;
     }
+    // read the BMP file info
     file.read((char *)&bmpInfoHeader, sizeof(BMPInfoHeader_t));
     if (bmpInfoHeader.height < 0) {
         std::cout << "The program can treat only BMP images with the origin in the bottom left corner!\n";
@@ -224,21 +229,26 @@ void Steganography::extract(const char *fileName) {
     std::cout << bmpInfoHeader << "\n";
 #endif
 
-    uint8_t tag = 0;
-    uint8_t p = 0;
-    uint8_t byte;
-    uint8_t byteOriginal = 0;
     uint32_t size = sizeof(BMPFileHeader_t);
+    uint8_t tag = 0; // how many bits were changed when hiding the image
+    uint8_t p = 0;   // current position within a byte
+    uint8_t byte;    // byte read off the file   
+    uint8_t byteOriginal = 0; // one byte of the hidden image
+
     int bytesPerPixel = bmpInfoHeader.bitDepth / 8;
     int rowPadding = getRowPadding(bmpInfoHeader.width, bytesPerPixel);
-    std::vector<uint8_t> outputData;
 
+    std::vector<uint8_t> outputData; // content of the extracted image
+
+    // move to the first byte of the data of the image
     file.seekg(bmpFileHeader.dataOffset);
 
+    // read the tag off the first 3 bytes
     for (uint8_t i = 0; i < TAG_SIZE; i++) {
         file.read((char *)&byte, sizeof(uint8_t));
         tag |= (byte & 1) << i;
     }
+    // validate the tag
     if (!(tag == 1 || tag == 2 || tag == 4)) {
         std::cout << "Invalid tag '" << (int)tag << "'\n";
         remove(SEPARATED_FILE_NAME_2);
@@ -250,30 +260,39 @@ void Steganography::extract(const char *fileName) {
     std::cout << (int)tag;
     if (tag == 1)
         std::cout << " bit was used to hide the image.\n";
-    std::cout << " bits were used to hide the image.\n";
+    else std::cout << " bits were used to hide the image.\n";
 #endif
 
     for (int i = 0; i < bmpInfoHeader.height; i++) {
         for (int j = (i == 0 ? TAG_SIZE : 0); j < bmpInfoHeader.width; j++) {
             for (int k = 0; k < bytesPerPixel; k++) {
+                // read a byte from the file
                 file.read((char *)&byte, sizeof(uint8_t));
+                // according to the tag, extract either 1,2 or 4 last
+                // least significant bits and add it to the byte of 
+                // the extracted image
                 switch (tag) {
                     case 1:
                         byteOriginal |= (byte & 0x01) << p;
-                        byte &= 0xFE;
+                        byte &= 0xFE;   // clear the last bit
                         break;
                     case 2:
                         byteOriginal |= (byte & 0x03) << p;
-                        byte &= 0xFC; 
+                        byte &= 0xFC;  // clear the last 2 bits
                         break;
                     case 4:
                         byteOriginal |= (byte & 0x0F) << p;
-                        byte &= 0xF0; 
+                        byte &= 0xF0;  // clear the last 4 bits
                         break;
                 }
                 p += tag; 
+
+                // once we cleared the last bits,
+                // store the byte back into the file
                 file.seekg(-1, std::ios_base::cur);
                 file.write((char *)&byte, sizeof(uint8_t));
+
+                // test if we reached the end of a byte
                 if (p == 8) {
                     outputData.push_back(byteOriginal);
                     byteOriginal = 0;
@@ -282,6 +301,8 @@ void Steganography::extract(const char *fileName) {
                         showProgress(size, outputData.size(), PROGRESS_STEP);
                     #endif
                     p = 0;
+                    // test if we've read just enough bytes to read
+                    // the header of the hidden image (we need the size)
                     if (outputData.size() == sizeof(BMPFileHeader_t)) {
                         if (((BMPFileHeader_t *)&outputData[0])->fileType != BMP_MAGIC_NUM) {
                             std::cout << "Esither there is no hidded image in '" << fileName << "' or it was damaged!\n";
@@ -290,6 +311,8 @@ void Steganography::extract(const char *fileName) {
                         }
                         size = ((BMPFileHeader_t *)&outputData[0])->fileSize;
                     }
+                    // if we've reached the end of the hiddne image,
+                    // store the content into a new file on the disk
                     if (size == (uint32_t)outputData.size()) {
                         std::ofstream output(SEPARATED_FILE_NAME_1, std::ios::binary);
                         output.write((const char *)&outputData[0], outputData.size());
@@ -301,6 +324,7 @@ void Steganography::extract(const char *fileName) {
                 }
             }
         }
+        // skip the blank space (padding)
         for (int j = 0; j < rowPadding; j++)
             file.read((char *)&byte, sizeof(uint8_t));
     }

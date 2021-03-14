@@ -1,5 +1,5 @@
 
-# KIV/BIT task 01 - Steganography!
+# KIV/BIT task 01 - Steganography
 
   
 
